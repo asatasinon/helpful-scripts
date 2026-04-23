@@ -8,6 +8,7 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 
 NODE_BIN="$(dirname "$(command -v node)")"
+COPILOT_BIN="$(command -v copilot-api || true)"
 PM2_BIN="$(command -v pm2 || true)"
 
 echo "Node bin: $NODE_BIN"
@@ -43,14 +44,19 @@ if ! command_exists pm2; then
 else
   echo "✓ pm2 already installed"
 fi
+
+if ! command_exists copilot-api; then
+  echo "→ Installing copilot-api ..."
+  npm install -g copilot-api
+else
+  echo "✓ copilot-api already installed"
+fi
+
+COPILOT_BIN="$(command -v copilot-api)"
 PM2_BIN="$(command -v pm2)"
 
+echo "copilot-api bin: $COPILOT_BIN"
 echo "pm2 bin: $PM2_BIN"
-
-if ! command_exists npx; then
-  echo "❌ npx 未安装（通常随 npm 一起提供），请先安装 npm"
-  exit 1
-fi
 
 echo "==> Creating directories..."
 mkdir -p "$HOME/.claude"
@@ -70,8 +76,6 @@ cat > "$CLAUDE_SETTINGS" <<'EOF'
     "ANTHROPIC_MODEL": "sonnet",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4.6",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4.6",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gpt-5-mini",
-    "ANTHROPIC_CUSTOM_MODEL_OPTION": "gpt-5.3-codex",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0"
   },
@@ -90,8 +94,8 @@ module.exports = {
   apps: [
     {
       name: "copilot-api",
-      script: "npx",
-      args: "-y copilot-api@latest start --claude-code",
+      script: "$COPILOT_BIN",
+      args: "start --claude-code",
       interpreter: "none",
       exec_mode: "fork",
       instances: 1,
@@ -125,10 +129,8 @@ if ! grep -q "alias claude-dev='claude --model sonnet'" "$ZSHRC_FILE" 2>/dev/nul
   cat >> "$ZSHRC_FILE" <<'EOF'
 
 # ===== Claude Code + copilot-api (direct) =====
-alias claude-dev='claude --model sonnet' 
+alias claude-dev='claude --model sonnet'
 alias claude-brain='claude --model opus'
-alias claude-fast='claude --model haiku'
-alias claude-main='claude --model gpt-5.3-codex'
 
 alias copilot-status='pm2 status'
 alias copilot-log='pm2 logs copilot-api'
@@ -146,7 +148,7 @@ echo "授权完成后，按 Ctrl+C 结束前台进程，脚本会继续。"
 echo
 
 set +e
-npx -y copilot-api@latest start --claude-code
+"$COPILOT_BIN" start --proxy-env
 set -e
 
 echo "==> Starting copilot-api with PM2..."
@@ -174,8 +176,6 @@ echo
 echo "常用命令："
 echo "  claude-dev       # Claude Sonnet 4.6"
 echo "  claude-brain     # Claude Opus 4.6"
-echo "  claude-fast      # GPT 5 Mini"
-echo "  claude-main      # GPT 5.3 Codex"
 echo "  copilot-status"
 echo "  copilot-log"
 echo "  copilot-restart"
