@@ -14,5 +14,3 @@
 
 > [setup-claude-copilot](../scripts/setup-claude-copilot.sh)
 
-
-## 修改配置
