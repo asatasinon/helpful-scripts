@@ -77,7 +77,9 @@ cat > "$CLAUDE_SETTINGS" <<'EOF'
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4.6",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4.6",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
-    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0"
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
+    "CLAUDE_CODE_NO_FLICKER": "1"
+
   },
   "permissions": {
     "defaultMode": "bypassPermissions",
